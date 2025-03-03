@@ -18,6 +18,7 @@ export function createDockview(
     options: DockviewComponentOptions
 ): DockviewApi {
     const component = new DockviewComponent(element, options);
+    console.log("ciaoneeee100")
     return component.api;
 }
 

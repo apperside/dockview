@@ -13,6 +13,7 @@ export class ReactPanelContentPart implements IContentRenderer {
     private readonly _element: HTMLElement;
     private part?: ReactPart<IDockviewPanelProps>;
 
+    
     private readonly _onDidFocus = new DockviewEmitter<void>();
     readonly onDidFocus: DockviewEvent<void> = this._onDidFocus.event;
 
@@ -28,6 +29,7 @@ export class ReactPanelContentPart implements IContentRenderer {
         private readonly component: React.FunctionComponent<IDockviewPanelProps>,
         private readonly reactPortalStore: ReactPortalStore
     ) {
+        console.log("ciaoneeeee999")
         this._element = document.createElement('div');
         this._element.className = 'dv-react-part';
         this._element.style.height = '100%';

@@ -42,13 +42,20 @@ function createBundle(format, options) {
     const input = getInput(options);
     const file = outputFile(format, isMinified, withStyles);
 
-    const external = [];
+    const external = ['react', 'react-dom', 'dockview-core'];
 
     const output = {
         file,
         format,
         sourcemap: true,
-        globals: {},
+        globals: {
+            'react': 'React',
+            'react-dom': 'ReactDOM',
+            'dockview-core': 'DockviewCore'
+        },
+        paths: {
+            'dockview-core': '/dockview-core/dist/dockview-core.esm.js'
+        },
         banner: [
             `/**`,
             ` * ${name}`,
@@ -61,7 +68,8 @@ function createBundle(format, options) {
 
     const plugins = [
         nodeResolve({
-            include: ['node_modules/dockview-core/**'],
+            browser: true,
+            resolveOnly: [/^(?!dockview-core)/]
         }),
         typescript({
             tsconfig: 'tsconfig.esm.json',
@@ -77,13 +85,6 @@ function createBundle(format, options) {
 
     if (format === 'umd') {
         output['name'] = name;
-    }
-
-    external.push('react', 'react-dom');
-
-    if (format === 'umd') {
-        output.globals['react'] = 'React';
-        output.globals['react-dom'] = 'ReactDOM';
     }
 
     return {

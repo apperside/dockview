@@ -14,6 +14,7 @@ import { pushToStart, pushToEnd, firstIndex } from '../array';
 import { range, clamp } from '../math';
 import { ViewItem } from './viewItem';
 import { IDisposable } from '../lifecycle';
+import { DockviewGroupPanel } from '../dockview/dockviewGroupPanel';
 
 export enum Orientation {
     HORIZONTAL = 'HORIZONTAL',
@@ -112,7 +113,7 @@ export class Splitview {
     private _endSnappingEnabled = true;
     private _disabled = false;
     private _margin = 0;
-
+    private _moveStarted = false;
     private readonly _onDidSashEnd = new Emitter<void>();
     readonly onDidSashEnd = this._onDidSashEnd.event;
     private readonly _onDidAddView = new Emitter<IView>();
@@ -430,21 +431,48 @@ export class Splitview {
         this.viewItems.splice(index, 0, viewItem);
 
         if (this.viewItems.length > 1) {
+            this.viewItems.forEach((item) => {
+                console.log(
+                    'this.viewItems item',
+                    (item.view as any).view,
+                    (item.view as any).view as DockviewGroupPanel
+                    // ((item.view as any).view as DockviewGroupPanelApiImpl)?.getParameters()
+                );
+            });
             //add sash
             const sash = document.createElement('div');
             sash.className = 'dv-sash';
+            sash.setAttribute(
+                'aria-orientation',
+                this._orientation === Orientation.HORIZONTAL
+                    ? 'horizontal'
+                    : 'vertical'
+            );
+            sash.setAttribute('role', 'separator');
+            sash.setAttribute('tabindex', '0');
+            sash.setAttribute('aria-label', 'Splitter');
+            sash.setAttribute('aria-valuemin', '0');
+            sash.setAttribute('aria-valuemax', '100');
 
-            const onPointerStart = (event: PointerEvent) => {
+            let start = 0;
+            const onMoveStart = (
+                startPosition: number,
+                inputType?: 'pointer' | 'keyboard',
+                direction?: 'left' | 'right' | 'up' | 'down'
+            ) => {
+                start = startPosition;
+                if (this._moveStarted) {
+                    return;
+                }
+                this._moveStarted = true;
+                console.log('onMoveStart', startPosition, inputType,this._moveStarted);
+
+                console.log(' this.viewItems', this.viewItems);
                 for (const item of this.viewItems) {
                     item.enabled = false;
                 }
 
                 const iframes = disableIframePointEvents();
-
-                const start =
-                    this._orientation === Orientation.HORIZONTAL
-                        ? event.clientX
-                        : event.clientY;
 
                 const sashIndex = firstIndex(
                     this.sashes,
@@ -521,11 +549,12 @@ export class Splitview {
                     };
                 }
 
-                const onPointerMove = (event: PointerEvent) => {
-                    const current =
-                        this._orientation === Orientation.HORIZONTAL
-                            ? event.clientX
-                            : event.clientY;
+                const onMove = (amount: number) => {
+                    // if (!moveStarted) {
+                    //     return;
+                    // }
+                    console.log('onMove', amount);
+                    const current = amount;
                     const delta = current - start;
 
                     this.resize(
@@ -543,7 +572,7 @@ export class Splitview {
                     this.layoutViews();
                 };
 
-                const end = () => {
+                const onMoveEnd = () => {
                     for (const item of this.viewItems) {
                         item.enabled = true;
                     }
@@ -552,24 +581,107 @@ export class Splitview {
 
                     this.saveProportions();
 
-                    document.removeEventListener('pointermove', onPointerMove);
-                    document.removeEventListener('pointerup', end);
-                    document.removeEventListener('pointercancel', end);
-
                     this._onDidSashEnd.fire(undefined);
+                    this._moveStarted = false;
                 };
 
-                document.addEventListener('pointermove', onPointerMove);
-                document.addEventListener('pointerup', end);
-                document.addEventListener('pointercancel', end);
+                /**
+                 * here, based on the input type, we will add the appropriate event listener,
+                 * but all of them will end calling above methods onMove() and onMoveEnd()
+                 */
+                if (inputType == 'pointer') {
+                    const onPointerMove = (event: PointerEvent) => {
+                        const current =
+                            this._orientation === Orientation.HORIZONTAL
+                                ? event.clientX
+                                : event.clientY;
+                        onMove(current);
+                    };
+
+                    const end = () => {
+                        onMoveEnd();
+                        document.removeEventListener(
+                            'pointermove',
+                            onPointerMove
+                        );
+                        document.removeEventListener('pointerup', end);
+                        document.removeEventListener('pointercancel', end);
+                    };
+
+                    document.addEventListener('pointermove', onPointerMove);
+                    document.addEventListener('pointerup', end);
+                    document.addEventListener('pointercancel', end);
+                } else {
+                    const delta =
+                        direction === 'left'
+                            ? -10
+                            : direction === 'right'
+                            ? 10
+                            : direction === 'up'
+                            ? -10
+                            : 10;
+                    onMove(start + delta);
+                    onMoveEnd();
+                }
             };
 
+            /**
+             * pointer listener
+             */
+            const onPointerStart = (event: PointerEvent) => {
+                const start =
+                    this._orientation === Orientation.HORIZONTAL
+                        ? event.clientX
+                        : event.clientY;
+
+                onMoveStart(start, 'pointer');
+            };
+
+            /**
+             * keyboard listener
+             */
+            const onKeyDown = (event: KeyboardEvent) => {
+                console.log('onKeyDown', event, this._moveStarted);
+                if (this._moveStarted) {
+                    return;
+                }
+                this._moveStarted = true;
+                /**
+                 * While on onPointerStart we have the x-y position of the mouse,
+                 * when we get a keyboard event we need to get the center of the sash
+                 * so we can use the same logic for both mouse and keyboard.
+                 * we need to get the bounding rect of the sash and then use the center
+                 * of the sash to determine the direction of the arrow key.
+                 */
+                const boundingRect = sash.getBoundingClientRect();
+                const center =
+                    this._orientation === Orientation.HORIZONTAL
+                        ? boundingRect.left + boundingRect.width / 2
+                        : boundingRect.top + boundingRect.height / 2;
+
+                if (this._orientation === Orientation.VERTICAL) {
+                    if (event.key === 'ArrowUp') {
+                        onMoveStart(center, 'keyboard', 'up');
+                    } else if (event.key === 'ArrowDown') {
+                        onMoveStart(center, 'keyboard', 'down');
+                    }
+                } else {
+                    if (event.key === 'ArrowLeft') {
+                        onMoveStart(center, 'keyboard', 'left');
+                    } else if (event.key === 'ArrowRight') {
+                        onMoveStart(center, 'keyboard', 'right');
+                    }
+                }
+            };
+
+            sash.addEventListener('keydown', onKeyDown);
             sash.addEventListener('pointerdown', onPointerStart);
 
             const sashItem: ISashItem = {
                 container: sash,
                 disposable: () => {
                     sash.removeEventListener('pointerdown', onPointerStart);
+                    sash.removeEventListener('keydown', onKeyDown);
                     this.sashContainer.removeChild(sash);
                 },
             };
@@ -853,6 +965,20 @@ export class Splitview {
                 const newSize = view.visible
                     ? offset + size - sashWidth / 2 + this.margin / 2
                     : offset;
+
+                const targetSash = this.sashes[i];
+                const targetView = this.viewItems[i];
+
+                if (targetSash && targetView) {
+                    // Calculate percentage as decimal between 0 and 1
+                    const totalSize = this._size;
+                    const percentage = newSize / totalSize;
+                    // set aria attribute
+                    targetSash.container.setAttribute(
+                        'aria-valuenow',
+                        percentage.toFixed(2)
+                    );
+                }
 
                 if (this._orientation === Orientation.HORIZONTAL) {
                     this.sashes[i].container.style.left = `${newSize}px`;

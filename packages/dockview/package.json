@@ -51,7 +51,8 @@
     "prepublishOnly": "npm run rebuild && npm run test",
     "rebuild": "npm run clean && npm run build",
     "test": "cross-env ../../node_modules/.bin/jest --selectProjects dockview",
-    "test:cov": "cross-env ../../node_modules/.bin/jest --selectProjects dockview --coverage"
+    "test:cov": "cross-env ../../node_modules/.bin/jest --selectProjects dockview --coverage",
+    "dev": "rollup -c --watch"
   },
   "dependencies": {
     "dockview-core": "^3.2.0"

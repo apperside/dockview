@@ -11,7 +11,8 @@
     "docs:version": "docusaurus docs:version",
     "typecheck": "tsc",
     "build-templates": "node scripts/buildTemplates.mjs",
-    "build-templates:local": "node scripts/buildTemplates.mjs --local"
+    "build-templates:local": "node scripts/buildTemplates.mjs --local",
+    "dev": "yarn start"
   },
   "browserslist": {
     "production": [

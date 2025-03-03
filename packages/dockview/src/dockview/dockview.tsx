@@ -69,6 +69,7 @@ function extractCoreOptions(props: IDockviewReactProps): DockviewOptions {
 
 export const DockviewReact = React.forwardRef(
     (props: IDockviewReactProps, ref: React.ForwardedRef<HTMLDivElement>) => {
+        console.log("ciaoneeee9")
         const domRef = React.useRef<HTMLDivElement>(null);
         const dockviewRef = React.useRef<DockviewApi>();
         const [portals, addPortal] = usePortalsLifecycle();
@@ -127,6 +128,7 @@ export const DockviewReact = React.forwardRef(
                     { addPortal }
                 ),
                 createComponent: (options) => {
+                    console.log("ciaoneeee99")
                     return new ReactPanelContentPart(
                         options.id,
                         props.components[options.name],
@@ -136,6 +138,7 @@ export const DockviewReact = React.forwardRef(
                     );
                 },
                 createTabComponent(options) {
+                    console.log("ciaoneeee1010")
                     return new ReactPanelHeaderPart(
                         options.id,
                         frameworkTabComponents[options.name],

@@ -119,7 +119,8 @@ export class Emitter<T> implements IDisposable {
         return this._last;
     }
 
-    constructor(private readonly options?: EmitterOptions) {}
+    constructor(private readonly options?: EmitterOptions) {
+    }
 
     get event(): Event<T> {
         if (!this._event) {

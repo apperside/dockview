@@ -83,7 +83,27 @@ function createBundle(format, options) {
     };
 }
 
-module.exports = [
+const config = {
+    input: 'src/index.ts',
+    output: {
+        file: 'dist/dockview-core.dev.js',
+        format: 'esm',
+        sourcemap: true
+    },
+    plugins: [
+        typescript({
+            tsconfig: './tsconfig.json',
+            sourceMap: true
+        })
+    ],
+    watch: {
+        include: 'src/**',
+        clearScreen: false
+    }
+};
+
+// Use development config when watching, otherwise use production builds
+module.exports =  [
     // amd
     createBundle('amd', { withStyles: false, isMinified: false }),
     createBundle('amd', { withStyles: true, isMinified: false }),

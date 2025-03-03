@@ -37,6 +37,15 @@ export default () => {
                 referencePanel: 'panel_1',
             },
         });
+
+        event.api.addPanel({
+            id: 'panel_3',
+            component: 'default',
+            position: {
+                direction: 'below',
+                referencePanel: 'panel_1',
+            },
+        });
         event.api.addPanel({
             id: 'panel_4',
             component: 'default',

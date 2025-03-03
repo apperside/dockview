@@ -26,7 +26,10 @@
     "set-experimental-versions": "node scripts/set-experimental-versions",
     "test": "jest",
     "test:cov": "jest --coverage",
-    "version": "lerna version"
+    "version": "lerna version",
+    "predev": "yarn link-packages",
+    "link-packages": "cd packages/dockview-core && yarn link && cd ../dockview && yarn unlink dockview-core && yarn link && yarn link dockview-core && cd ../docs && yarn link dockview-core && yarn link dockview",
+    "dev": "lerna run --parallel --scope dockview-core --scope dockview --scope dockview-docs dev"
   },
   "resolutions": {
     "@types/react": "^18.2.46",
@@ -59,6 +62,7 @@
     "jest-sonar-reporter": "^2.0.0",
     "jsdom": "^23.0.1",
     "lerna": "^8.0.1",
+    "nodemon": "^3.1.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rimraf": "^5.0.5",
@@ -77,5 +81,6 @@
   },
   "engines": {
     "node": ">=18.0"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610"
 }

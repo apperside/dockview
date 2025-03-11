@@ -373,6 +373,7 @@ export class SplitviewComponent
 
                     this.doAddView(panel);
                     setTimeout(() => {
+                        console.log('this._onDidAddView2', this._onDidAddView);
                         // the original onDidAddView events are missed since they are fired before we can subcribe to them
                         this._onDidAddView.fire(panel);
                     }, 0);

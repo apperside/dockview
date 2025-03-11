@@ -116,7 +116,7 @@ export class DockviewGroupPanel
         );
 
         this.api.initialize(this); // cannot use 'this' after after 'super' call
-
+        
         this._model = new DockviewGroupPanelModel(
             this.element,
             accessor,
@@ -124,6 +124,7 @@ export class DockviewGroupPanel
             options,
             this
         );
+        console.log('DockviewGroupPanel constructor', this._model.panels);
 
         this.addDisposables(
             this.model.onDidActivePanelChange((event) => {

@@ -102,7 +102,7 @@ const components = {
 
 const App = (props: { theme?: string }) => {
     const [api, setApi] = React.useState<DockviewApi>();
-
+alert()
     const onReady = (event: DockviewReadyEvent) => {
         const panel1 = event.api.addPanel({
             id: 'panel_1',
@@ -134,8 +134,10 @@ const App = (props: { theme?: string }) => {
                 direction: 'below',
             },
         });
+
     };
 
+    alert()
     return (
         <DockviewReact
             onReady={onReady}

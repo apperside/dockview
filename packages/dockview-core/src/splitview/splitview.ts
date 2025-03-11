@@ -15,6 +15,9 @@ import { range, clamp } from '../math';
 import { ViewItem } from './viewItem';
 import { IDisposable } from '../lifecycle';
 import { DockviewGroupPanel } from '../dockview/dockviewGroupPanel';
+import { LeafNode } from '../gridview/leafNode';
+import { DockviewGroupPanelApiImpl } from '../api/dockviewGroupPanelApi';
+import { DockviewGroupPanelModel } from '../dockview/dockviewGroupPanelModel';
 
 export enum Orientation {
     HORIZONTAL = 'HORIZONTAL',
@@ -228,6 +231,7 @@ export class Splitview {
         private readonly container: HTMLElement,
         options: SplitViewOptions
     ) {
+        console.log('Splitview constructor', options);
         this._orientation = options.orientation ?? Orientation.VERTICAL;
         this.element = this.createContainer();
 
@@ -431,14 +435,21 @@ export class Splitview {
         this.viewItems.splice(index, 0, viewItem);
 
         if (this.viewItems.length > 1) {
-            this.viewItems.forEach((item) => {
-                console.log(
-                    'this.viewItems item',
-                    (item.view as any).view,
-                    (item.view as any).view as DockviewGroupPanel
-                    // ((item.view as any).view as DockviewGroupPanelApiImpl)?.getParameters()
-                );
-            });
+            // this.viewItems.forEach((item) => {
+            //     console.log(
+            //         'this.viewItems item',
+            //         view,
+            //         (
+            //             (
+            //                 ((view as LeafNode).view as DockviewGroupPanel)
+            //                     .api as any
+            //             )._group as DockviewGroupPanel
+            //         ).model.panels,
+            //         (item.view as any).view,
+            //         (item.view as any).view as DockviewGroupPanel
+            //         // ((item.view as any).view as DockviewGroupPanelApiImpl)?.getParameters()
+            //     );
+            // });
             //add sash
             const sash = document.createElement('div');
             sash.className = 'dv-sash';
@@ -450,7 +461,31 @@ export class Splitview {
             );
             sash.setAttribute('role', 'separator');
             sash.setAttribute('tabindex', '0');
-            sash.setAttribute('aria-label', 'Splitter');
+            const castedView = view as LeafNode;
+            const castedView2 = castedView.view as DockviewGroupPanel;
+
+            const part = castedView2.part as DockviewGroupPanelModel;
+            const group = (castedView2.api as any)
+                ._group as DockviewGroupPanel & { _group: DockviewGroupPanel };
+            console.log(
+                'this.viewItems item',
+                JSON.stringify(view)
+                // JSON.stringify( (view as any).view.model.panels),
+                // Object.assign([], ...castedView2.panels),
+                // part.panels.findIndex((p) => {console.log("this.viewItems item part is",p);return p.id === '0'}),
+                // JSON.stringify(group.model.panels.values()),
+                // Object.assign([], group.model.panels),
+                // castedView,
+                // (view as any).view.api._group.model.panels[0],
+                // Array.from(group.model.panels),
+                // group.model.panels['0'],
+                // group.model.panels.at(0),
+                // (group as any)._model._panels
+            );
+            sash.setAttribute(
+                'aria-label',
+                (group as any)._model._panels[0]?.id
+            );
             sash.setAttribute('aria-valuemin', '0');
             sash.setAttribute('aria-valuemax', '100');
 
@@ -465,7 +500,12 @@ export class Splitview {
                     return;
                 }
                 this._moveStarted = true;
-                console.log('onMoveStart', startPosition, inputType,this._moveStarted);
+                console.log(
+                    'onMoveStart',
+                    startPosition,
+                    inputType,
+                    this._moveStarted
+                );
 
                 console.log(' this.viewItems', this.viewItems);
                 for (const item of this.viewItems) {
@@ -702,6 +742,7 @@ export class Splitview {
             this.distributeViewSizes();
         }
 
+        console.log('this._onDidAddView', view);
         this._onDidAddView.fire(view);
     }
 
@@ -908,6 +949,7 @@ export class Splitview {
      * For each view `i` the offet must be adjusted by `m * i/(n - 1)`.
      */
     private layoutViews(): void {
+
         this._contentSize = this.viewItems.reduce((r, i) => r + i.size, 0);
 
         this.updateSashEnablement();
